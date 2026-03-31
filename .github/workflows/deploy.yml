@@ -27,13 +27,19 @@ jobs:
         with:
           node-version: 20
 
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup pnpm
+        run: corepack prepare pnpm@9.15.0 --activate
+
       - name: Install dependencies
         working-directory: frontend
-        run: npm install --include=dev
+        run: pnpm install
 
       - name: Build
         working-directory: frontend
-        run: npm run build
+        run: pnpm exec vite build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
