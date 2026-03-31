@@ -17,10 +17,9 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        values = [self.frontend_url, *self.cors_origins.split(",")]
         result = []
-        for value in values:
-            value = value.strip()
+        for value in self.cors_origins.split(","):
+            value = value.strip().rstrip("/")
             if value and value not in result:
                 result.append(value)
         return result
