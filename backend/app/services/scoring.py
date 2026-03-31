@@ -1,6 +1,6 @@
 import math
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 ROLE_WEIGHTS = {
     "participant": 1.0,
@@ -22,16 +22,20 @@ def scale_factor(num_participants: int) -> float:
     return 1 + math.log10(num_participants)
 
 
+
 def activity_factor(active_days: int) -> float:
     return min(1 + active_days / 30, 2)
+
 
 
 def streak_factor(weeks_streak: int) -> float:
     return 1 + 0.05 * weeks_streak
 
 
+
 def anti_spam(base_coins: float, events_per_day: int) -> float:
     return base_coins / (1 + 0.1 * events_per_day)
+
 
 
 def calculate_event_score(event: dict) -> float:
@@ -42,11 +46,13 @@ def calculate_event_score(event: dict) -> float:
     return c * w * m * q
 
 
+
 def calculate_rating(events: list, active_days: int, streak_weeks: int) -> float:
     base_score = sum(calculate_event_score(e) for e in events)
     a = activity_factor(active_days)
     s = streak_factor(streak_weeks)
     return round(base_score * a * s, 2)
+
 
 
 def days_active(last_activity_at):
@@ -58,30 +64,47 @@ def days_active(last_activity_at):
     return max(1, (now - last_activity_at).days)
 
 
-def events_today_count(participations, user_id, event_date):
-    total = 0
-    for p in participations:
-        if p.user_id == user_id and p.event.starts_at.date() == event_date.date():
-            total += 1
-    return max(total, 1)
+
+def _to_number(value, default=0.0):
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return value
+    try:
+        return float(str(value).replace(',', '.').strip())
+    except (TypeError, ValueError):
+        return default
+
 
 
 def build_user_rating_payload(user, confirmed_participations):
     by_day = defaultdict(int)
     for p in confirmed_participations:
-        by_day[p.event.starts_at.date()] += 1
+        if p.event and p.event.starts_at:
+            by_day[p.event.starts_at.date()] += 1
+
     events = []
     for p in confirmed_participations:
-        role = p.role
-        if user.role == "organizer":
+        if not p.event or not p.event.starts_at:
+            continue
+
+        role = p.role or "participant"
+        if getattr(user, "role", None) == "organizer":
             role = "organizer"
-        if user.role == "superadmin":
-            role = "leader"
-        events.append({
-            "coins": max(p.coins_awarded, p.event.base_coins),
-            "participants": max(len(p.event.participations), p.event.audience_size or 1),
-            "role": role,
-            "quality": p.event.quality or "base",
-            "events_today": by_day[p.event.starts_at.date()],
-        })
-    return calculate_rating(events, days_active(user.last_activity_at), user.streak_weeks)
+
+        awarded = _to_number(getattr(p, "coins_awarded", 0), 0)
+        base = _to_number(getattr(p.event, "base_coins", 0), 0)
+        audience = int(max(_to_number(getattr(p.event, "audience_size", 1), 1), 1))
+        participants_count = len(getattr(p.event, "participations", []) or [])
+
+        events.append(
+            {
+                "coins": max(awarded, base),
+                "participants": max(participants_count, audience),
+                "role": role,
+                "quality": getattr(p.event, "quality", None) or "base",
+                "events_today": by_day[p.event.starts_at.date()] or 1,
+            }
+        )
+
+    return calculate_rating(events, days_active(getattr(user, "last_activity_at", None)), getattr(user, "streak_weeks", 0))
