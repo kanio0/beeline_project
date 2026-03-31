@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: beeline-project-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://kanio0.github.io
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,https://kanio0.github.io
+      - key: RUN_BOT
+        value: false

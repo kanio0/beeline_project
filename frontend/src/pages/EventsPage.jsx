@@ -208,7 +208,7 @@ export default function EventsPage() {
       <section className="events-stage-grid wider-event-stage-grid">
         {user?.role === 'organizer' && (
           <div className="glass-card exact-card exact-event-form-card expanded-event-form-card">
-            <div className="panel-head exact-panel-head"><h3>Создать событие</h3></div>
+            <div className="panel-head exact-panel-head"><h3>Создать событие</h3><span>Старый стиль событий + новые сценарии</span></div>
             <form className="event-form-grid exact-event-form" onSubmit={handleCreate}>
               <label>Название<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></label>
               <label>Город<input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></label>

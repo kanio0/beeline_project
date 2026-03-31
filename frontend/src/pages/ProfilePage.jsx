@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/client';
+import MonthBoard from '../components/MonthBoard';
 
 const emptyForm = { name: '', phone: '', telegram_username: '', city: '', about: '' };
 const baseRoles = ['лектор', 'ведущий', 'помощник', 'модератор', 'координатор', 'фотограф', 'регистратор'];
@@ -198,6 +199,7 @@ export default function ProfilePage() {
     }
   };
 
+  const calendarEvents = useMemo(() => mineEvents, [mineEvents]);
   if (error && !profile) return <div className="page-loader">{error}</div>;
   if (!profile) return <div className="page-loader">Загрузка профиля…</div>;
 
@@ -236,10 +238,11 @@ export default function ProfilePage() {
             <div className="profile-side-stack">
               <section className="highlight-card yellow-card exact-yellow-card"><span>Личный рейтинг</span><strong>{profile.rating || profile.coins_balance || 220}</strong><div className="mini-bars"><i /><i /><i /></div></section>
               <section className="glass-card exact-card profile-achievements-card"><h3>Личные достижения<br />и прогресс</h3><div className="achievement-stack">{(profile.achievements?.length ? profile.achievements : [{ name: 'Самая большая аудитория', description: 'Собрана аудитория 120', icon: '🎯' }]).slice(0, 4).map((item, index) => (<div className="small-achievement exact-small-achievement" key={index}><span>{item.icon || '🏆'}</span><div><strong>{item.name}</strong><p>{item.description}</p></div></div>))}</div></section>
+              <section className="glass-card exact-card profile-calendar-card square-profile-calendar"><MonthBoard events={calendarEvents} compact onEventClick={setSelectedEvent} /></section>
             </div>
           </div>
         </div>
-        <aside className="profile-team-column wider-team-column" style={{ marginTop: "56px" }}>
+        <aside className="profile-team-column wider-team-column">
           <section className="glass-card exact-card profile-team-list-card profile-team-panel clickable-card" role="button" onClick={() => profile.team_id && navigate(`/teams/${profile.team_id}`)}>
             <div className="panel-head exact-panel-head profile-team-panel-head"><h3>{profile.team?.name || profile.team_detail?.name || 'Команда'}</h3><span>Открыть страницу команды</span></div>
             <div className="person-list compact-list">{teamMembers.map((item, index) => (<div className="person-row exact-person-row" key={item.id || index}><div className="person-row-main"><div className="person-avatar exact-avatar">{item.name?.[0] || 'V'}</div><div><strong>{item.name}</strong><p>{item.city || 'Участник'}</p></div></div><div className="person-score"><span className={`role-pill ${profile.team_detail?.leader_id === item.id ? 'leader' : ''}`}>{profile.team_detail?.leader_id === item.id ? 'Лидер' : 'Участник'}</span><strong>{item.rating || 0}</strong></div></div>))}</div>

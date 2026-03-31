@@ -51,6 +51,7 @@ function PodiumRow({ topUsers }) {
           </div>
         ))}
       </div>
+      <button className="primary-button small-demo-button" type="button">Демо координатора</button>
     </section>
   );
 }
